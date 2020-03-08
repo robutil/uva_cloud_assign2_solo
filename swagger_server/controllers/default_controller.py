@@ -1,3 +1,5 @@
+from typing import Union, Tuple
+
 import connexion
 
 from swagger_server.models.student import Student  # noqa: E501
@@ -53,7 +55,15 @@ def get_student_by_id(student_id, subject=None):  # noqa: E501
     return 'Not Found', 404
 
 
-def get_student_by_last_name(last_name):
+def get_student_by_last_name(last_name: str) -> Union[Student, Tuple[str, int]]:
+    """
+    Returns a single student that matches the given last name. If no student is found
+    this function returns a tuple containing an error message and error code, in that
+    order.
+
+    :param last_name: Last name of student to find
+    :return: Student or error description
+    """
     res = student_service.get_student_by_last_name(last_name=last_name)
     if res:
         return res
