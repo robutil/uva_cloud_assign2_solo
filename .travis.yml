@@ -1,0 +1,33 @@
+language: python
+python:
+  - "3.6"
+before_install:
+- docker version
+- docker info
+install:
+- npm install newman
+- pip install -r requirements.txt
+- pip install -r test-requirements.txt
+- pip install nose
+- pip install Flask-Testing
+before_script:
+- node --version
+- npm --version
+- node_modules/.bin/newman --version
+script:
+- python -m unittest discover
+- docker build -t robutil/uva_solo:latest .
+- docker run --name image_test -d -t -p 127.0.0.1:8080:8080 robutil/uva_solo:latest
+- docker ps
+- count=0 && until $(curl --output /dev/null --silent --head --fail http://localhost:8080);
+  do printf '.' && sleep 3 && count=$((count+1)) && if [ $count -gt 5 ]; then break;
+  fi; done
+- docker logs image_test
+- node_modules/.bin/newman run tests/postman_collection.json -e tests/postman_environment.json
+after_success:
+- docker login -u $DOCKER_USER -p $DOCKER_PASS
+- docker push robutil/uva_solo:latest
+env:
+  global:
+  - secure: h1gqOZ+YPKUY9XIGy13CC7FOY1lafwKA+346Iu5OjDaGG4RVJquSNH4hER7kp9t18tquz4Xb0GPBMqaIAzGroqwO+XFhoTtP0c3UuzdhDP3LcWSMugNIWBK1Js65AsLBmzPj4HdvqhHkuG4D4QndMLTLTQWh4T6ClmWnXHJ/y2DI//TaKB02Bp+3B0Tzim9DDIoJwjZAfRumvPU8TupmAYMtgqsTmiPsjwoeHAeXpYeSfGM6pRZUq2gASUVW0m7VPG1DJMSBlkhYKuxXJFP7MVbQk5Dr0hYHbDklU5TVgJZBECEyDZqXP64chrMno08QRG06CklKthEt7UJ0e5/RtTNVihPM52g0VwU4ZZgwOIDo3mj4TvIeWQI7tfQ7vlvQiJy/3ddZfD3thhni4nXLASoE2O3na1e+1Lm3d4k7A1KkzjV531z4Jjo88gPyMbI8RZTP8VOacguSdcE8Al0dSHo6h49t1wrpK8udVsxyVnK7SPq1tIa/I/VcDZboJL1h42zL0xNwLqgS+xckayxlH0qtWOLoUQiTeM5I4PIsKE5s2XNBC4vmWVGJjS1qJAmORzNLe+TsWStVTP/mUN8HIUAVqag8jOfgeEUr9dDJc7h5TCpjkIx6IJM+JH6JJZ4w6iI3z/cK3hfyyFslyuSIHB7fcNSJknW7TjTd0/yvsNU=
+  - secure: i76FEG3/trUYCQocLOvePhM8T44fDgUUO/+rbFGHtmvaw+e5wV3B7fp/ndOgP/S1KbouW7f03R/yKF3O0Nx28n7H3PHFEaI0XLQeKpBGDEtIwFNyA4oyWrnGrRjV5JU+AIxRGq6TyHz+TRGKHDO9gjbMWWL8DcfpKpLWQDTB8W3MH8BPPJQasHalq44Jxv2BoTPwT6JIy5dGeDRcDJvQcu6GH09OVw34DrwPH7zPNni6YYPKpoLt01xzzwog6B+5hgLYToGsXh5PbomCHauH91oT4g858DW8jyRIiHlDiCFPqSd25PF3qMP6BxHbOtf0ExVvNazcrPxSeyQpPGoF2T1WtSCxiachsMz87vNlRDFh4Vy2P7od682sl1nLJL8YQ4NimcEznt50VvDMisPwO4dCQkDwgP5/RVMy9BQSJm3KT2bnn2NB+RGi9u94+7Usjr3PlodkMqarEOM8oCE6gvtnS2oW0U9tZ14GqhGhCdbvk2FEqaEsJAU2S+XY3H9EiabqSis6xxVCOCVTgvq0rcPSIVlDZ04gEq1kv/vV0DiZpmjhb5aAaZMTgD/7SZAopz06BfMG9HXv1MlPRzcCvEL8Nap6IsfExL6dBDaWg0oYnWAp8PRd2hqrLbrGqSni5tPQqIprUA/9+avLcFIN4ZuIt4eGIPGdXQ9nEp0MTQQ=
